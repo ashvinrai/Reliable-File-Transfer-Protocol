@@ -27,11 +27,15 @@ def check_checksum(packet):
 
 def request_file(filename):
 
-	f = open(filename, 'r')
+	try:
+		f = open(filename, 'r')
+	except:
+		print "file not found"
+		return None
 	x = True
 	l = []
 	while(x):
-		div = f.read(16)
+		div = f.read(512)
 		if (div != ""):
 			l.append(div)
 		else:

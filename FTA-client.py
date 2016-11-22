@@ -27,10 +27,12 @@ seq = 0
 acknum = 1
 dest_addr = (SOURCE_IP, int(SOURCE_PORT))
 while (True):
-   word = str(raw_input('Commands: connect, get <filename>, window <size>, disconnect: '))
+   word = str(raw_input('Commands: connect, get <filename>, put <filename>, window <size>, disconnect: '))
    word = str.split(word)
    if (word[0] == "connect"):
-      if State == "NONE":
+      if len(word) != 1:
+        print "invalid command"
+      elif State == "NONE":
         #Three way handshake
         s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
         packet = util.make_packet("", SOURCE_PORT, seq, acknum, True, False, False, window, "SYN") #Send SYN. Flags = SYN, ACK, END
@@ -45,8 +47,10 @@ while (True):
           log('Packet sent. ACK = True')
           print 'Connection is established'
           State = "CONNECTED"
-   if (word[0] == "get"):
-      if State == "CONNECTED":
+   elif (word[0] == "get"):
+      if len(word) != 2:
+        print "invalid command; file name required"
+      elif State == "CONNECTED":
         acknum = 0
         filename = word[1]
         log('get command with filename: ' + filename)
@@ -87,8 +91,10 @@ while (True):
         f.close()
       else:
         print 'Cannot get a file: You did not create a connection yet!'
-   if (word[0] == "window"):
-      if State != "CONNECTED":
+   elif (word[0] == "window"):
+      if len(word) != 1:
+        print "invalid command"
+      elif State != "CONNECTED":
         print 'Cannot change window: You did not create a connection yet!'
       else:
         windowToSend = word[1]
@@ -96,8 +102,10 @@ while (True):
         s.sendto(packet, dest_addr)
         window = int(windowToSend)
         log('New window size: ' + str(window))
-   if (word[0] == "disconnect"):
-      if State != "CONNECTED":
+   elif (word[0] == "disconnect"):
+      if len(word) != 1:
+        print "invalid command"
+      elif State != "CONNECTED":
          print 'Cannot disconnect: You did not create a connection yet!'
       else:
          State = 'NONE'
@@ -106,3 +114,59 @@ while (True):
          s.shutdown(socket.SHUT_RDWR)
          s.close()
          log('Connection has been disconnected!')
+   elif (word[0] == "put"):
+      if len(word) != 2:
+        print "invalid command; file name required"
+      elif (State != "CONNECTED"):
+          print 'Cannot post: You did not create a connection yet!'
+      else:
+          seq = 0
+          filename = word[1]
+          log('Sending file: ' + filename)
+          packet = util.make_packet("", SOURCE_PORT, seq, acknum, True, False, False, putwindow, "put " + filename)
+          s.sendto(packet, dest_addr)
+          data = util.request_file(filename)
+          packets = []
+          x = 0
+          window_pointer = 0
+          while x < len(data):
+            if x == len(data) - 1:
+              packet = util.make_packet("", SOURCE_PORT, x, acknum, True, False, True, putwindow, data[x])
+            else:
+              packet = util.make_packet("", SOURCE_PORT, x, acknum, True, False, False, putwindow, data[x])
+            packets.append(packet)
+            x += 1
+          
+          if (len(packets) < window):
+            while window_pointer < len(packets):
+              s.sendto(packets[window_pointer], addr)
+              window_pointer+=1
+              end = "True"
+          else:
+            while window_pointer < window:
+              s.sendto(packets[window_pointer], addr)
+              window_pointer+=1
+              end = "False"
+          #s.settimeout(TIMEOUT_SECONDS)
+          packet, addr = s.recvfrom(4096)
+          print packet
+          header, data, checksum = util.unpack_packet(packet)
+          seq = int(header[3])
+          while end != "True": 
+            window_pointer = 0
+            while window_pointer < window:
+              s.sendto(packets[window_pointer + seq], dest_addr)
+              if(seq+window_pointer == len(packets) - 1):
+                window_pointer = window
+              else:
+                window_pointer+=1
+            #s.settimeout(TIMEOUT_SECONDS)
+            packet, addr = s.recvfrom(4096)
+            print packet
+            header, data, checksum = util.unpack_packet(packet)
+            seq = int(header[3])
+            end = header[6]
+          packet, addr = s.recvfrom(4096)
+          print "File transfer complete"
+   else:
+      print "invalid command entered"

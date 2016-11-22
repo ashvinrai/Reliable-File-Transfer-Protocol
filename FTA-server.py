@@ -4,19 +4,19 @@ import sys
 import array
 debugMode = False
 def log(s):
-    if debugMode:
-        print s
+	if debugMode:
+		print s
 
 if len(sys.argv) < 3:
-    print 'Too little arguments! Must input FTA-Server.py, port, and IP version (optional: \'-d\' for debug mode)'
-    sys.exit()
+	print 'Too little arguments! Must input FTA-Server.py, port, and IP version (optional: \'-d\' for debug mode)'
+	sys.exit()
 elif len(sys.argv) > 3:
-    if len(sys.argv) == 4 and sys.argv[3] == "-d":
-        debugMode = True
-        log("Entering debug mode...")
-    else:
-        print 'Too many arguments! Must input FTA-Server.py, port, and IP version (optional: \'-d\' for debug mode)'
-        sys.exit()
+	if len(sys.argv) == 4 and sys.argv[3] == "-d":
+		debugMode = True
+		log("Entering debug mode...")
+	else:
+		print 'Too many arguments! Must input FTA-Server.py, port, and IP version (optional: \'-d\' for debug mode)'
+		sys.exit()
 TIMEOUT_SECONDS = 20
 window = 5
 putwindow = 5
@@ -87,15 +87,21 @@ while (True):
 				x += 1
 			
 			#first [window] packets sent
-			while window_pointer < window:
-				s.sendto(packets[window_pointer], addr)
-				window_pointer+=1
+			if (len(packets) < window):
+				while window_pointer < len(packets):
+					s.sendto(packets[window_pointer], addr)
+					window_pointer+=1
+					end = "True"
+			else:
+				while window_pointer < window:
+					s.sendto(packets[window_pointer], addr)
+					window_pointer+=1
+					end = "False"
 			#s.settimeout(TIMEOUT_SECONDS)
 			packet, addr = s.recvfrom(4096)
 			print packet
 			header, data, checksum = util.unpack_packet(packet)
 			seq = int(header[3])
-			end = "False"
 			while end != "True": 
 				window_pointer = 0
 				while window_pointer < window:
@@ -112,6 +118,41 @@ while (True):
 				end = header[6]
 			packet, addr = s.recvfrom(4096)
 			print "File transfer complete"
+		elif cmd == "put":
+			acknum = 0
+			filename = data.split(" ")[1]
+			log('Retrieving file: ' + filename)
+
+			packets = []
+			end = False
+			msg = ""
+			while end != True:
+			  x = 0
+			  while x < window:
+				#s.settimeout(TIMEOUT_SECONDS)
+				packet, addr = s.recvfrom(4096)
+				print packet
+				header, data, checksum = util.unpack_packet(packet)
+				if str(acknum) == header[2] and header[4] and util.check_checksum(packet):
+				  packets.append(packet)
+				  x += 1
+				  acknum += 1
+				  msg += data 
+				  if header[6] == "True":
+					packet = util.make_packet("", SOURCE_PORT, seq, acknum, False, True, True, putwindow, "END")
+					s.sendto(packet, addr)
+					x = window
+					end = True
+				else:
+				  x = window
+				  print "missing or damaged packet"
+			  packet = util.make_packet("", SOURCE_PORT, seq, acknum, False, True, False, putwindow, "ACK")
+			  s.sendto(packet, addr)
+			print msg
+			newFile = filename.split('.')[0] + 'PUT.txt'
+			f = open(newFile, 'w')
+			f.write(msg)
+			f.close()
 
 	##This method of getting user input cannot work; can have a diff thread for listening to user input instead
 	#word = str(raw_input(''))
