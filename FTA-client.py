@@ -32,7 +32,7 @@ while (True):
    if (word[0] == "connect"):
       if State == "NONE":
         #Three way handshake
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
         packet = util.make_packet("", SOURCE_PORT, seq, acknum, True, False, False, window, "SYN") #Send SYN. Flags = SYN, ACK, END
         s.sendto(packet, dest_addr)
         log('Packet sent. SYN = True')

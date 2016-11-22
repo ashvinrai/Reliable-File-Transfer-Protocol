@@ -7,15 +7,15 @@ def log(s):
     if debugMode:
         print s
 
-if len(sys.argv) < 2:
-    print 'Too little arguments! Must input FTA-Server.py and port (optional: \'-d\' for debug mode)'
+if len(sys.argv) < 3:
+    print 'Too little arguments! Must input FTA-Server.py, port, and IP version (optional: \'-d\' for debug mode)'
     sys.exit()
-elif len(sys.argv) > 2:
-    if len(sys.argv) == 3 and sys.argv[2] == "-d":
+elif len(sys.argv) > 3:
+    if len(sys.argv) == 4 and sys.argv[3] == "-d":
         debugMode = True
         log("Entering debug mode...")
     else:
-        print 'Too many arguments! Must input FTA-Server.py and port (optional: \'-d\' for debug mode)'
+        print 'Too many arguments! Must input FTA-Server.py, port, and IP version (optional: \'-d\' for debug mode)'
         sys.exit()
 TIMEOUT_SECONDS = 20
 window = 5
@@ -24,7 +24,17 @@ window_pointer = 0
 SOURCE_PORT = int(sys.argv[1])
 seq = 0
 acknum = 0
-s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+ipv4 = True
+if (sys.argv[2] == "-v6"):
+	ipv4 = False
+elif (sys.argv[2] == "-v4"):
+	ipv4 = True
+else:
+	print "-v4 or -v6 required"
+if(ipv4):
+	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+else:
+	s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
 s.bind(('', SOURCE_PORT))
 print 'Listening on port', SOURCE_PORT, '...'
 not_connected = True
