@@ -86,7 +86,6 @@ while (True):
         filename = word[1]
         log('get command with filename: ' + filename)
         packet = util.make_packet("", SOURCE_PORT, seq, acknum, True, False, False, window, "get " + filename)
-        print packet
         s.sendto(packet, dest_addr)
         ##TO-DO
         ##Sent filename to server. Server must now send the file back
@@ -98,7 +97,6 @@ while (True):
           while x < window:
             #s.settimeout(TIMEOUT_SECONDS)
             packet, addr = s.recvfrom(4096)
-            print packet
             header, data, checksum = util.unpack_packet(packet)
             if str(acknum) == header[2] and header[4] and util.check_checksum(packet):
               packets.append(packet)
@@ -115,7 +113,6 @@ while (True):
               print "missing or damaged packet"
           packet = util.make_packet("", SOURCE_PORT, seq, acknum, False, True, False, window, "ACK")
           s.sendto(packet, dest_addr)
-        print msg
         newFile = "GET" + filename
         f = open(newFile, 'w')
         f.write(msg)
@@ -180,7 +177,6 @@ while (True):
               end = "False"
           #s.settimeout(TIMEOUT_SECONDS)
           packet, addr = s.recvfrom(4096)
-          print packet
           header, data, checksum = util.unpack_packet(packet)
           seq = int(header[3])
           while end != "True": 
@@ -193,7 +189,6 @@ while (True):
                 window_pointer+=1
             #s.settimeout(TIMEOUT_SECONDS)
             packet, addr = s.recvfrom(4096)
-            print packet
             header, data, checksum = util.unpack_packet(packet)
             seq = int(header[3])
             end = header[6]

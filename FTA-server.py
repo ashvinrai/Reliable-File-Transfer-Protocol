@@ -71,7 +71,7 @@ while (True):
 		if cmd == 'terminate':
 			s.shutdown(socket.SHUT_RDWR)
 		 	s.close()
-		 	print "socket closed"
+		 	print "socket closed, goodbye..."
 		 	sys.exit()
 		 	break
 		if cmd == 'disconnect':
@@ -109,7 +109,6 @@ while (True):
 					end = "False"
 			#s.settimeout(TIMEOUT_SECONDS)
 			packet, addr = s.recvfrom(4096)
-			print packet
 			header, data, checksum = util.unpack_packet(packet)
 			seq = int(header[3])
 			while end != "True": 
@@ -122,7 +121,6 @@ while (True):
 						window_pointer+=1
 				#s.settimeout(TIMEOUT_SECONDS)
 				packet, addr = s.recvfrom(4096)
-				print packet
 				header, data, checksum = util.unpack_packet(packet)
 				seq = int(header[3])
 				end = header[6]
@@ -141,7 +139,6 @@ while (True):
 			  while x < window:
 				#s.settimeout(TIMEOUT_SECONDS)
 				packet, addr = s.recvfrom(4096)
-				print packet
 				header, data, checksum = util.unpack_packet(packet)
 				if str(acknum) == header[2] and header[4] and util.check_checksum(packet):
 				  packets.append(packet)
@@ -158,7 +155,6 @@ while (True):
 				  print "missing or damaged packet"
 			  packet = util.make_packet("", SOURCE_PORT, seq, acknum, False, True, False, putwindow, "ACK")
 			  s.sendto(packet, addr)
-			print msg
 			newFile = 'PUT' + filename
 			f = open(newFile, 'w')
 			f.write(msg)
