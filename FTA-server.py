@@ -8,14 +8,14 @@ def log(s):
 		print s
 
 if len(sys.argv) < 3:
-	print 'Too little arguments! Must input FTA-Server.py, port, and IP version (optional: \'-d\' for debug mode)'
+	print 'Too little arguments! Must input FTA-Server.py, and port (optional: \'-d\' for debug mode)'
 	sys.exit()
 elif len(sys.argv) > 3:
 	if len(sys.argv) == 4 and sys.argv[3] == "-d":
 		debugMode = True
 		log("Entering debug mode...")
 	else:
-		print 'Too many arguments! Must input FTA-Server.py, port, and IP version (optional: \'-d\' for debug mode)'
+		print 'Too many arguments! Must input FTA-Server.py, and port (optional: \'-d\' for debug mode)'
 		sys.exit()
 TIMEOUT_SECONDS = 20
 window = 5
