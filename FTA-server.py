@@ -42,6 +42,7 @@ established = False
 while (True):
 	if (not_connected):
 		packet, addr = s.recvfrom(4096)
+		print "here"
 		header, data, checksum = util.unpack_packet(packet)
 		log('Received packet. SYN = ' +  header[4] + '. . .')
 		if (header[4].strip() == "True"): #Receive SYN
@@ -64,7 +65,16 @@ while (True):
 		if cmd == 'window':
 			window = int(data.split(" ")[1])
 			log('New window size: ' + str(window))
-		elif cmd == 'terminate':
+		if cmd == 'putwindow':
+			putwindow = int(data.split(" ")[1])
+			log('New window size: ' + str(putwindow))
+		if cmd == 'terminate':
+			s.shutdown(socket.SHUT_RDWR)
+		 	s.close()
+		 	print "socket closed"
+		 	sys.exit()
+		 	break
+		if cmd == 'disconnect':
 			print 'Client disconnected'
 			established = False
 			not_connected = True
@@ -149,7 +159,7 @@ while (True):
 			  packet = util.make_packet("", SOURCE_PORT, seq, acknum, False, True, False, putwindow, "ACK")
 			  s.sendto(packet, addr)
 			print msg
-			newFile = filename.split('.')[0] + 'PUT.txt'
+			newFile = 'PUT' + filename
 			f = open(newFile, 'w')
 			f.write(msg)
 			f.close()
